@@ -26,6 +26,14 @@
       "detail": "Run the installer with verbose output."
     },
     {
+      "label": "Install DTS Live (Dry Run + Verbose)",
+      "type": "shell",
+      "command": "./install.sh --dry-run -v",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Preview installer actions with detailed logging."
+    },
+    {
       "label": "Reconfigure DTS HDMI Output",
       "type": "shell",
       "command": "./install.sh --reconfigure",
@@ -44,10 +52,26 @@
     {
       "label": "Test Library Imports",
       "type": "shell",
-      "command": "./test-imports.sh",
+      "command": "./util/test-imports.sh",
       "group": "test",
       "problemMatcher": [],
       "detail": "Validate that all library scripts source correctly."
+    },
+    {
+      "label": "Diagnose PipeWire",
+      "type": "shell",
+      "command": "./util/diagnose-pipewire.sh",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Run PipeWire diagnostic checks."
+    },
+    {
+      "label": "Recover PipeWire",
+      "type": "shell",
+      "command": "./util/recover-pipewire.sh",
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "Attempt to recover and restart PipeWire."
     }
   ]
 }

@@ -48,10 +48,10 @@ find_dts_sink_id() {
       /Sinks:/ { in_sinks = 1; next }
       /Sources:/ { in_sinks = 0 }
       in_sinks && /DTS Live Sink/ {
-        # Extract ID number from line like "  34. DTS Live Sink"
-        match($0, /^[[:space:]]*([0-9]+)\./, arr)
-        if (arr[1]) {
-          print arr[1]
+        # Extract ID number from line like "├─ 34. DTS Live Sink"
+        # Use first number found rather than anchor to start (handles UTF-8 box chars)
+        if (match($0, /[0-9]+/)) {
+          print substr($0, RSTART, RLENGTH)
           exit
         }
       }
