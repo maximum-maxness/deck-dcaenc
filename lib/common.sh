@@ -14,6 +14,10 @@ log_error() {
 }
 
 log_verbose() {
+  # Always write to log file, only write to terminal if VERBOSE=1
+  if [[ -n "${LOG_FILE:-}" ]]; then
+    echo "[VERBOSE] $*" >> "$LOG_FILE"
+  fi
   if [[ "$VERBOSE" == "1" ]]; then
     echo "[VERBOSE] $*" >&2
   fi

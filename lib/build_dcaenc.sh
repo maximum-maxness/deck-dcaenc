@@ -40,16 +40,16 @@ build_and_install_dcaenc() {
   make distclean 2>/dev/null || true
 
   log_verbose "Running autoreconf..."
-  autoreconf -f -i -v 2>&1 | tail -3 || true
+  autoreconf -f -i -v 2>&1
 
   log_verbose "Running configure..."
-  ./configure --prefix=/usr --libdir=/usr/lib >/dev/null 2>&1
+  ./configure --prefix=/usr --libdir=/usr/lib 2>&1
 
   log_verbose "Compiling with $(nproc) jobs..."
-  make -j"$(nproc)" >/dev/null 2>&1
+  make -j"$(nproc)" 2>&1
 
   log_info "Installing dcaenc..."
-  sudo make install >/dev/null 2>&1
+  sudo make install 2>&1
   sudo ldconfig >/dev/null 2>&1
 
   popd >/dev/null

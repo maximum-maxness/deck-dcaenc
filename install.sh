@@ -19,6 +19,12 @@ source "$REPO_DIR/lib/detect_outputs.sh"
 source "$REPO_DIR/lib/write_configs.sh"
 source "$REPO_DIR/lib/pipewire.sh"
 
+# Enable command tracing to log file for full verbosity (after library setup)
+export PS4='[CMD] ${BASH_SOURCE}:${LINENO}: '
+exec 4>>"$LOG_FILE"
+export BASH_XTRACEFD=4
+set -x
+
 show_usage() {
   cat >&2 <<EOF
 Usage: $0 [OPTIONS]
