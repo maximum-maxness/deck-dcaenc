@@ -29,8 +29,8 @@ This project automates the setup of a PipeWire audio sink that encodes 5.1 surro
 ### Quick Start
 
 ```bash
-git clone https://github.com/yourname/steamdeck-dts-live.git
-cd steamdeck-dts-live
+git clone https://github.com/maximum-maxness/deck-dcaenc.git
+cd deck-dcaenc
 chmod +x install.sh uninstall.sh
 ./install.sh
 ```
