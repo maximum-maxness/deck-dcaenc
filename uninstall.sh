@@ -4,11 +4,10 @@
 # Log file location
 LOG_FILE="${STEAMDECK_DTS_LOG:-$PWD/steamdeck-dts-live.log}"
 
-# If not already logging, re-exec with tee
-if [[ -z "${STEAMDECK_DTS_LOGGING:-}" ]]; then
-  export STEAMDECK_DTS_LOGGING=1
-  exec > >(tee -a "$LOG_FILE") 2>&1
-fi
+# Setup logging (redirect to log file, keep terminal clean)
+exec {LOG_FD}>>"$LOG_FILE"
+exec > >(tee /dev/fd/$LOG_FD)
+exec 2>&1
 
 # Debug mode: enable with --debug or DEBUG=1
 for arg in "$@"; do
@@ -43,26 +42,27 @@ removed_count=0
 if [[ -f "$HOME/.asoundrc" ]]; then
   rm -f "$HOME/.asoundrc"
   echo "Removed: ~/.asoundrc"
-  ((removed_count++))
+  removed_count=$((removed_count + 1))
 fi
 
 if [[ -f "$HOME/.config/pipewire/pipewire.conf.d/60-dts-live.conf" ]]; then
   rm -f "$HOME/.config/pipewire/pipewire.conf.d/60-dts-live.conf"
   echo "Removed: ~/.config/pipewire/pipewire.conf.d/60-dts-live.conf"
-  ((removed_count++))
+  removed_count=$((removed_count + 1))
 fi
 
 if [[ -f "$HOME/.config/wireplumber/wireplumber.conf.d/51-default-targets.conf" ]]; then
   rm -f "$HOME/.config/wireplumber/wireplumber.conf.d/51-default-targets.conf"
   echo "Removed: ~/.config/wireplumber/wireplumber.conf.d/51-default-targets.conf"
-  ((removed_count++))
+  removed_count=$((removed_count + 1))
 fi
 
 echo
 
 # Restart audio stack
 echo "Restarting PipeWire audio stack..."
-systemctl --user restart pipewire pipewire-pulse wireplumber
+systemctl --user restart pipewire pipewire-pulse wireplumber || true
+sleep 2
 echo "Audio stack restarted"
 echo
 
@@ -80,3 +80,7 @@ echo
 echo "To uninstall dcaenc completely, run:"
 echo "  sudo pacman -R dcaenc  (if installed as package)"
 echo "  (or manually remove the files above)"
+
+# Cleanup: close log file descriptor  
+exec {LOG_FD}>&-
+exit 0

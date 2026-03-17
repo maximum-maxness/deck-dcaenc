@@ -45,34 +45,37 @@ write_pipewire_sink_config() {
   log_info "Writing PipeWire DTS sink configuration..."
 
   cat > "$config_dir/60-dts-live.conf" <<EOF
+# Steam Deck DTS Live Sink Configuration
+# Creates a playback-only (no capture) adapter for DTS audio encoding
+
 context.objects = [
     { factory = adapter
         args = {
+            # Basic adapter properties
             factory.name           = api.alsa.pcm.sink
             node.name              = "dts_live_sink"
             node.description       = "DTS Live Sink"
             media.class            = "Audio/Sink"
 
+            # ALSA device configuration
             device.api             = "alsa"
             device.class           = "sound"
-
             api.alsa.path          = "dcahdmi:CARD=Generic,DEV=${dev}"
             api.alsa.pcm.card      = 0
             api.alsa.disable-mmap  = true
-            node.pause-on-idle     = false
 
+            # Audio format (5.1 surround)
             audio.format           = "S16LE"
             audio.rate             = 48000
             audio.channels         = 6
             audio.position         = [ FL FR RL RR FC LFE ]
 
+            # PipeWire behavior
+            node.pause-on-idle     = false
             priority.session       = 1200
             
-            # Suppress redundant capture nodes
-            capture.props = {
-                node.name = "dts_live_capture"
-                node.hidden = true
-            }
+            # CRITICAL: Disable monitor (capture) node completely
+            monitor                = false
         }
     }
 ]
