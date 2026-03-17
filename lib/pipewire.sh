@@ -1,66 +1,110 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-write_asoundrc() {
-  local dev="$1"
-  mkdir -p "$HOME"
+restart_audio_stack() {
+  if [[ "$DRY_RUN" == "1" ]]; then
+    log_info "[DRY RUN] Would restart: pipewire, pipewire-pulse, wireplumber"
+    return
+  fi
 
-  cat > "$HOME/.asoundrc" <<EOF
-<confdir:pcm/dca.conf>
-
-defaults.pcm.dca.iec61937 1
-
-pcm.!default {
-    type plug
-    slave.pcm "dcahdmi:CARD=Generic,DEV=${dev}"
+  log_info "Restarting PipeWire audio stack..."
+  systemctl --user restart pipewire pipewire-pulse wireplumber
+  log_verbose "Audio stack restarted"
 }
 
-ctl.!default {
-    type hw
-    card Generic
+wait_for_pipewire() {
+  if [[ "$DRY_RUN" == "1" ]]; then
+    log_info "[DRY RUN] Would wait for PipeWire to become available"
+    return
+  fi
+
+  log_info "Waiting for PipeWire to become available..."
+  local i
+  for i in {1..20}; do
+    if wpctl status >/dev/null 2>&1; then
+      log_verbose "PipeWire is ready (attempt $i/20)"
+      sleep 1
+      return 0
+    fi
+    sleep 0.5
+  done
+  log_error "PipeWire did not come up in time after 10 seconds."
+  log_error "Check status with: systemctl --user status pipewire"
+  log_error "View logs with: journalctl --user -u pipewire -n 20"
+  exit 1
 }
-EOF
-}
 
-write_pipewire_sink_config() {
-  local dev="$1"
-  mkdir -p "$HOME/.config/pipewire/pipewire.conf.d"
-
-  cat > "$HOME/.config/pipewire/pipewire.conf.d/60-dts-live.conf" <<EOF
-context.objects = [
-    { factory = adapter
-        args = {
-            factory.name           = api.alsa.pcm.sink
-            node.name              = "dts_live_sink"
-            node.description       = "DTS Live Sink"
-            media.class            = "Audio/Sink"
-
-            device.api             = "alsa"
-            device.class           = "sound"
-
-            api.alsa.path          = "dcahdmi:CARD=Generic,DEV=${dev}"
-            api.alsa.pcm.card      = 0
-            api.alsa.disable-mmap  = true
-            node.pause-on-idle     = false
-
-            audio.format           = "S16LE"
-            audio.rate             = 48000
-            audio.channels         = 6
-            audio.position         = [ FL FR RL RR FC LFE ]
-
-            priority.session       = 1200
-        }
+find_dts_sink_id() {
+  local sink_id
+  sink_id="$(wpctl status | awk '
+    /Sinks:/ { in_sinks = 1; next }
+    /Sources:/ { in_sinks = 0 }
+    in_sinks && /DTS Live Sink/ {
+      # Extract ID number from line like "  34. DTS Live Sink"
+      match($0, /^[[:space:]]*([0-9]+)\./, arr)
+      if (arr[1]) {
+        print arr[1]
+        exit
+      }
     }
-]
-EOF
+  ')" || sink_id=""
+
+  if [[ -z "$sink_id" ]]; then
+    log_verbose "DTS Live Sink not found in wpctl status"
+    return 1
+  fi
+
+  log_verbose "Found DTS Live Sink with ID: $sink_id"
+  printf '%s\n' "$sink_id"
 }
 
-write_wireplumber_restore_config() {
-  mkdir -p "$HOME/.config/wireplumber/wireplumber.conf.d"
+set_default_sink() {
+  local sink_id="$1"
 
-  cat > "$HOME/.config/wireplumber/wireplumber.conf.d/51-default-targets.conf" <<'EOF'
-wireplumber.settings = {
-  node.restore-default-targets = true
+  if [[ "$DRY_RUN" == "1" ]]; then
+    log_info "[DRY RUN] Would set sink $sink_id as default"
+    return
+  fi
+
+  if [[ -z "$sink_id" ]]; then
+    log_error "Cannot set default sink: sink_id is empty"
+    exit 1
+  fi
+
+  log_info "Setting DTS Live Sink (ID: $sink_id) as default..."
+  wpctl set-default "$sink_id"
+  log_verbose "Default sink set to $sink_id"
 }
-EOF
+
+verify_sink_config() {
+  local sink_id="$1"
+
+  if [[ "$DRY_RUN" == "1" ]]; then
+    log_info "[DRY RUN] Would verify sink configuration"
+    return
+  fi
+
+  log_info "Verifying DTS sink configuration..."
+
+  # Check with wpctl
+  local wpctl_info
+  wpctl_info="$(wpctl inspect "$sink_id" 2>/dev/null || echo "")"
+  
+  if [[ -z "$wpctl_info" ]]; then
+    log_error "Could not inspect sink $sink_id"
+    return 1
+  fi
+
+  # Check with pactl for sink format
+  local pactl_info
+  pactl_info="$(pactl list sinks short 2>/dev/null | grep "dts_live_sink" || echo "")"
+
+  if [[ -n "$pactl_info" ]]; then
+    log_verbose "Sink info: $pactl_info"
+    log_info "DTS sink is configured and available"
+    return 0
+  else
+    log_verbose "Could not verify sink with pactl (may still be working)"
+    return 0
+  fi
 }

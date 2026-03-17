@@ -1,0 +1,53 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Install DTS Live (Full)",
+      "type": "shell",
+      "command": "./install.sh",
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "Run the full installer script."
+    },
+    {
+      "label": "Install DTS Live (Dry Run)",
+      "type": "shell",
+      "command": "./install.sh --dry-run",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Preview all installer actions without making changes."
+    },
+    {
+      "label": "Install DTS Live (Verbose)",
+      "type": "shell",
+      "command": "./install.sh -v",
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "Run the installer with verbose output."
+    },
+    {
+      "label": "Reconfigure DTS HDMI Output",
+      "type": "shell",
+      "command": "./install.sh --reconfigure",
+      "group": "build",
+      "problemMatcher": [],
+      "detail": "Reconfigure HDMI output without rebuilding dcaenc."
+    },
+    {
+      "label": "Uninstall DTS Live Config",
+      "type": "shell",
+      "command": "./uninstall.sh",
+      "group": "clean",
+      "problemMatcher": [],
+      "detail": "Remove user configuration and restart PipeWire."
+    },
+    {
+      "label": "Test Library Imports",
+      "type": "shell",
+      "command": "./test-imports.sh",
+      "group": "test",
+      "problemMatcher": [],
+      "detail": "Validate that all library scripts source correctly."
+    }
+  ]
+}

@@ -3,7 +3,14 @@ set -euo pipefail
 
 write_asoundrc() {
   local dev="$1"
+
+  if [[ "$DRY_RUN" == "1" ]]; then
+    log_info "[DRY RUN] Would write ~/.asoundrc with DEV=$dev"
+    return
+  fi
+
   mkdir -p "$HOME"
+  log_info "Writing ~/.asoundrc..."
 
   cat > "$HOME/.asoundrc" <<EOF
 <confdir:pcm/dca.conf>
@@ -20,13 +27,24 @@ ctl.!default {
     card Generic
 }
 EOF
+
+  log_verbose "Created: $HOME/.asoundrc"
 }
 
 write_pipewire_sink_config() {
   local dev="$1"
-  mkdir -p "$HOME/.config/pipewire/pipewire.conf.d"
 
-  cat > "$HOME/.config/pipewire/pipewire.conf.d/60-dts-live.conf" <<EOF
+  if [[ "$DRY_RUN" == "1" ]]; then
+    log_info "[DRY RUN] Would write PipeWire config with DEV=$dev"
+    return
+  fi
+
+  local config_dir="$HOME/.config/pipewire/pipewire.conf.d"
+  mkdir -p "$config_dir"
+  
+  log_info "Writing PipeWire DTS sink configuration..."
+
+  cat > "$config_dir/60-dts-live.conf" <<EOF
 context.objects = [
     { factory = adapter
         args = {
@@ -53,14 +71,26 @@ context.objects = [
     }
 ]
 EOF
+
+  log_verbose "Created: $config_dir/60-dts-live.conf"
 }
 
 write_wireplumber_restore_config() {
-  mkdir -p "$HOME/.config/wireplumber/wireplumber.conf.d"
+  if [[ "$DRY_RUN" == "1" ]]; then
+    log_info "[DRY RUN] Would write WirePlumber restore config"
+    return
+  fi
 
-  cat > "$HOME/.config/wireplumber/wireplumber.conf.d/51-default-targets.conf" <<'EOF'
+  local config_dir="$HOME/.config/wireplumber/wireplumber.conf.d"
+  mkdir -p "$config_dir"
+  
+  log_info "Writing WirePlumber default target restore configuration..."
+
+  cat > "$config_dir/51-default-targets.conf" <<'EOF'
 wireplumber.settings = {
   node.restore-default-targets = true
 }
 EOF
+
+  log_verbose "Created: $config_dir/51-default-targets.conf"
 }
