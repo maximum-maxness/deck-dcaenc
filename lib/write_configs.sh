@@ -67,6 +67,12 @@ context.objects = [
             audio.position         = [ FL FR RL RR FC LFE ]
 
             priority.session       = 1200
+            
+            # Suppress redundant capture nodes
+            capture.props = {
+                node.name = "dts_live_capture"
+                node.hidden = true
+            }
         }
     }
 ]

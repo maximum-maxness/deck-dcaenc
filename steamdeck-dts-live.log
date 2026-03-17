@@ -113,3 +113,103 @@ Could not connect to PipeWire
 [ERROR]   3. Verify .asoundrc: cat ~/.asoundrc
 [ERROR]   4. Test ALSA directly: speaker-test -D dcahdmi:CARD=Generic,DEV=8 -c 6 -r 48000 -F S16_LE
 [ERROR]   4. Test ALSA directly: speaker-test -D dcahdmi:CARD=Generic,DEV=8 -c 6 -r 48000 -F S16_LE
+========================================
+Steam Deck DTS Live Installer
+========================================
+
+[INFO] DEBUG mode enabled - full trace will be logged
+[INFO] Disabling SteamOS read-only root...
+Warning: The rootfs is already read-write!
+         Nothing is performed.
+[INFO] Installing build dependencies...
+warning: git-2.47.1-1 is up to date -- skipping
+warning: base-devel-1-2 is up to date -- skipping
+warning: autoconf-2.72-1 is up to date -- skipping
+warning: automake-1.17-1 is up to date -- skipping
+warning: libtool-2.5.4+r1+gbaa1fe41-1 is up to date -- skipping
+warning: alsa-lib-1.2.13-1 is up to date -- skipping
+warning: pkgconf-2.3.0-1 is up to date -- skipping
+warning: linux-api-headers-6.10-1 is up to date -- skipping
+ there is nothing to do
+[INFO] Repairing core packages...
+warning: alsa-lib-1.2.13-1 is up to date -- skipping
+warning: linux-api-headers-6.10-1 is up to date -- skipping
+ there is nothing to do
+[INFO] Building dcaenc...
+[INFO] Preparing build directory: /run/user/1000/steamdeck-dts-live-build
+[INFO] Updating existing dcaenc repository...
+HEAD is now at 9b89d76 Release version 3
+[INFO] Building dcaenc...
+configure.ac:11: installing './missing'
+Makefile.am: installing './depcomp'
+autoreconf: Leaving directory '.'
+[INFO] Installing dcaenc...
+[INFO] dcaenc build and install complete
+[INFO] dcaenc build complete
+
+========================================
+Detected HDMI Outputs
+========================================
+
+  [0] HDMI 0 (device 3)
+  [1] HDMI 1 (device 7)
+  [2] DELL S2725QS (device 8)
+  [3] HDMI 3 (device 9)
+
+Choose HDMI output index (0-3): [INFO] Selected: DELL S2725QS (device 8)
+[INFO] Using HDMI device: 8
+
+[INFO] Writing ~/.asoundrc...
+[INFO] Writing PipeWire DTS sink configuration...
+[INFO] Writing WirePlumber default target restore configuration...
+[INFO] Restarting PipeWire audio stack...
+[INFO] Waiting for PipeWire to become available...
+Could not connect to PipeWire
+[ERROR] DTS sink was not found after restarting PipeWire.
+[ERROR] Troubleshooting steps:
+[ERROR]   1. Check sink creation: wpctl status
+[ERROR]   2. View PipeWire logs: journalctl --user -u pipewire -n 50
+[ERROR]   3. Verify .asoundrc: cat ~/.asoundrc
+[ERROR]   4. Test ALSA directly: speaker-test -D dcahdmi:CARD=Generic,DEV=8 -c 6 -r 48000 -F S16_LE
+========================================
+Steam Deck DTS Live Installer
+========================================
+
+[VERBOSE] Found command: sudo
+[VERBOSE] Found command: git
+[VERBOSE] Found command: aplay
+[VERBOSE] Found command: systemctl
+[VERBOSE] Found command: wpctl
+[VERBOSE] Found command: pactl
+[INFO] Reconfiguration mode: skipping build
+[VERBOSE] Detecting HDMI outputs...
+[VERBOSE] Found 4 HDMI output(s)
+========================================
+Detected HDMI Outputs
+========================================
+
+  [0] HDMI 0
+  [1] HDMI 1
+  [2] DELL S2725QS
+  [3] HDMI 3
+
+Choose HDMI output index (0-3): [INFO] Selected: DELL S2725QS (ALSA DEV=2)
+[INFO] Using HDMI device: 2
+
+[INFO] Writing ~/.asoundrc...
+[VERBOSE] Created: /home/deck/.asoundrc
+[INFO] Writing PipeWire DTS sink configuration...
+[VERBOSE] Created: /home/deck/.config/pipewire/pipewire.conf.d/60-dts-live.conf
+[INFO] Writing WirePlumber default target restore configuration...
+[VERBOSE] Created: /home/deck/.config/wireplumber/wireplumber.conf.d/51-default-targets.conf
+[INFO] Restarting PipeWire audio stack...
+[VERBOSE] Audio stack restarted
+[INFO] Waiting for PipeWire to become available...
+[VERBOSE] PipeWire is ready (attempt 1/20)
+[VERBOSE] DTS Live Sink not found in wpctl status
+[ERROR] DTS sink was not found after restarting PipeWire.
+[ERROR] Troubleshooting steps:
+[ERROR]   1. Check sink creation: wpctl status
+[ERROR]   2. View PipeWire logs: journalctl --user -u pipewire -n 50
+[ERROR]   3. Verify .asoundrc: cat ~/.asoundrc
+[ERROR]   4. Test ALSA directly: speaker-test -D dcahdmi:CARD=Generic,DEV=2 -c 6 -r 48000 -F S16_LE

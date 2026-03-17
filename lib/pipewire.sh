@@ -8,6 +8,10 @@ restart_audio_stack() {
   fi
 
   log_info "Restarting PipeWire audio stack..."
+  
+  # Clear stale lock files before restart to prevent "already running" errors
+  rm -f /run/user/1000/pipewire-*.lock /run/user/1000/pipewire-*.state /run/user/1000/pipewire-0-manager 2>/dev/null || true
+  
   systemctl --user restart pipewire pipewire-pulse wireplumber
   log_verbose "Audio stack restarted"
 }
@@ -35,27 +39,36 @@ wait_for_pipewire() {
 }
 
 find_dts_sink_id() {
+  local i
   local sink_id
-  sink_id="$(wpctl status | awk '
-    /Sinks:/ { in_sinks = 1; next }
-    /Sources:/ { in_sinks = 0 }
-    in_sinks && /DTS Live Sink/ {
-      # Extract ID number from line like "  34. DTS Live Sink"
-      match($0, /^[[:space:]]*([0-9]+)\./, arr)
-      if (arr[1]) {
-        print arr[1]
-        exit
+  
+  # Give the adapter time to fully initialize (it can take a few retries)
+  for i in {1..15}; do
+    sink_id="$(wpctl status 2>/dev/null | awk '
+      /Sinks:/ { in_sinks = 1; next }
+      /Sources:/ { in_sinks = 0 }
+      in_sinks && /DTS Live Sink/ {
+        # Extract ID number from line like "  34. DTS Live Sink"
+        match($0, /^[[:space:]]*([0-9]+)\./, arr)
+        if (arr[1]) {
+          print arr[1]
+          exit
+        }
       }
-    }
-  ')" || sink_id=""
+    ')" || sink_id=""
 
-  if [[ -z "$sink_id" ]]; then
-    log_verbose "DTS Live Sink not found in wpctl status"
-    return 1
-  fi
+    if [[ -n "$sink_id" ]]; then
+      log_verbose "Found DTS Live Sink with ID: $sink_id (attempt $i/15)"
+      printf '%s\n' "$sink_id"
+      return 0
+    fi
+    
+    # Wait a bit before retrying
+    sleep 0.3
+  done
 
-  log_verbose "Found DTS Live Sink with ID: $sink_id"
-  printf '%s\n' "$sink_id"
+  log_verbose "DTS Live Sink not found after 4.5 seconds of retries"
+  return 1
 }
 
 set_default_sink() {

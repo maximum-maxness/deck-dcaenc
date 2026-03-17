@@ -22,17 +22,21 @@ choose_hdmi_output() {
   echo >&2
 
   local i=0
+  local -a alsa_dev_map  # Map aplay -l index to ALSA DEV number
+  
   for line in "${lines[@]}"; do
-    local label dev_num
-    # Extract device number: "device 3:" -> "3"
-    dev_num="$(sed -E 's/^.*device ([0-9]+):.*/\1/' <<<"$line")"
+    local label hdmi_num
+    # Extract HDMI number: "HDMI 0" -> "0", "HDMI 1" -> "1"
+    hdmi_num="$(sed -E 's/^.*HDMI ([0-9]+).*/\1/' <<<"$line")"
     # Extract label: "card 0, device 3: HDMI 0 [LG TV RVU]" -> "LG TV RVU"
     label="$(sed -E 's/^.*\[(.*)\].*$/\1/' <<<"$line")"
     # If no bracket label found, use the HDMI number
     if [[ "$label" == "$line" ]]; then
-      label="HDMI $dev_num"
+      label="HDMI $hdmi_num"
     fi
-    printf "  [%d] %s (device %s)\n" "$i" "$label" "$dev_num" >&2
+    # Store the HDMI DEV number (HDMI 0 -> DEV 0, HDMI 1 -> DEV 1, etc)
+    alsa_dev_map[$i]="$hdmi_num"
+    printf "  [%d] %s\n" "$i" "$label" >&2
     ((i+=1))
   done
 
@@ -44,14 +48,14 @@ choose_hdmi_output() {
     exit 1
   fi
 
-  local selected_dev
-  selected_dev="$(sed -E 's/^.*device ([0-9]+):.*/\1/' <<<"${lines[$choice]}")"
+  # Get the ALSA DEV number (which corresponds to HDMI N)
+  local selected_dev="${alsa_dev_map[$choice]}"
   local selected_label
   selected_label="$(sed -E 's/^.*\[(.*)\].*$/\1/' <<<"${lines[$choice]}")"
   if [[ "$selected_label" == "${lines[$choice]}" ]]; then
     selected_label="HDMI $selected_dev"
   fi
 
-  log_info "Selected: $selected_label (device $selected_dev)"
+  log_info "Selected: $selected_label (ALSA DEV=$selected_dev)"
   printf '%s\n' "$selected_dev"
 }
